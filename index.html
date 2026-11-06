@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SHARK VISIT</title>
 <meta name="theme-color" content="#4A4F55">
 <link rel="manifest" href="manifest.webmanifest">
@@ -10,21 +10,22 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="SHARK VISIT">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <script>
   // ====== GANTI DENGAN LINK /exec APLIKASI ASLI (bukan DEV) ======
   var APP_URL = 'https://script.google.com/macros/s/AKfycbwnzqEJHPm_laH-PYzz6jOZ7_z_m3Ny0xcbAJ2GZd4ersXwmKjC0PJQu3_4Gv_zxMXb/exec';
-  // ================================================================
-  // Dibuka dari ikon di layar utama (start_url ?app=1) -> langsung ke aplikasi.
-  if (/[?&]app=1/.test(location.search)) location.replace(APP_URL);
+  // ==================================================================
 </script>
 <style>
   :root { --or:#FF4814; --or2:#D23F17; --sh:#4A4F55; }
   * { box-sizing:border-box; }
-  body { margin:0; min-height:100vh; background:var(--sh); color:#fff; font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-         display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 16px; text-align:center;
-         position:relative; overflow-x:hidden; }
-  body::before { content:""; position:fixed; top:0; left:0; right:0; height:6px; background:var(--or); }
-  .wm { position:fixed; right:-20px; bottom:-30px; font-family:"Arial Black",Arial,sans-serif; font-weight:900; font-size:150px;
+  html, body { margin:0; height:100%; background:var(--sh); }
+  body { color:#fff; font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+  /* ---------- halaman pembuka ---------- */
+  #pembuka { min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+             padding:24px 16px; text-align:center; position:relative; overflow:hidden; }
+  #pembuka::before { content:""; position:absolute; top:0; left:0; right:0; height:6px; background:var(--or); }
+  .wm { position:absolute; right:-20px; bottom:-30px; font-family:"Arial Black",Arial,sans-serif; font-weight:900; font-size:150px;
         letter-spacing:-4px; line-height:1; color:rgba(255,255,255,.07); pointer-events:none; user-select:none; }
   img.logo, h1, p, .btn, .langkah { position:relative; }
   img.logo { width:160px; height:160px; border-radius:32px; box-shadow:0 10px 28px rgba(0,0,0,.35); }
@@ -33,26 +34,88 @@
   .btn { display:block; width:100%; max-width:340px; margin:14px auto 0; padding:15px; border-radius:12px; border:none;
          font:inherit; font-size:17px; font-weight:800; text-decoration:none; cursor:pointer; }
   .putih { background:#fff; color:var(--or2); }
-  .abu { background:var(--or); color:#fff; }
-  .hidden { display:none; }
+  .oranye { background:var(--or); color:#fff; }
+  .hidden { display:none !important; }
   .langkah { background:rgba(255,255,255,.08); border-radius:12px; padding:12px 14px; margin-top:18px; max-width:380px; text-align:left; font-size:14px; }
   .langkah b { font-weight:800; }
+  /* ---------- aplikasi layar penuh ---------- */
+  #aplikasi { position:fixed; inset:0; background:var(--sh); }
+  #aplikasi iframe { position:absolute; inset:0; width:100%; height:100%; border:0; background:#F4F5F7; }
+  #memuat { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; color:#fff; font-size:14px; }
+  #memuat img { width:96px; height:96px; border-radius:22px; }
+  .putar { width:28px; height:28px; border:3px solid rgba(255,255,255,.25); border-top-color:#fff; border-radius:50%; animation:p 1s linear infinite; }
+  @keyframes p { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
-  <div class="wm" aria-hidden="true">VISIT</div>
-  <img class="logo" src="icon-512.png" alt="Shark">
-  <h1>SHARK VISIT</h1>
-  <p>PT Sharprindo Dinamika Prima</p>
-  <button id="btnPasang" class="btn abu hidden">Pasang di Layar Utama</button>
-  <a id="btnBuka" class="btn putih" href="#">Buka SHARK VISIT</a>
-  <div class="langkah" id="petunjuk">
-    <b>Pasang ikon di HP:</b><br>
-    Android (Chrome): ketuk menu <b>⋮</b> → <b>Tambahkan ke layar utama</b> / <b>Instal aplikasi</b>.<br>
-    iPhone (Safari): ketuk <b>Bagikan</b> → <b>Tambahkan ke Layar Utama</b>.
+  <div id="pembuka" class="hidden">
+    <div class="wm" aria-hidden="true">VISIT</div>
+    <img class="logo" src="icon-512.png" alt="Shark">
+    <h1>SHARK VISIT</h1>
+    <p>PT Sharprindo Dinamika Prima</p>
+    <button id="btnPasang" class="btn oranye hidden">Pasang di Layar Utama</button>
+    <button id="btnBuka" class="btn putih">Buka SHARK VISIT</button>
+    <div class="langkah">
+      <b>Pasang aplikasi di HP:</b><br>
+      Android (Chrome): ketuk menu <b>⋮</b> → <b>Instal aplikasi</b> / <b>Tambahkan ke layar utama</b>.<br>
+      iPhone (Safari): ketuk <b>Bagikan</b> → <b>Tambahkan ke Layar Utama</b>.
+    </div>
   </div>
+
+  <div id="aplikasi" class="hidden">
+    <div id="memuat"><img src="icon-192.png" alt=""><div class="putar"></div>Memuat SHARK VISIT…</div>
+    <iframe id="layar" title="SHARK VISIT"
+            allow="geolocation *; camera *; microphone *; clipboard-read *; clipboard-write *; fullscreen *"></iframe>
+  </div>
+
 <script>
-  document.getElementById('btnBuka').href = APP_URL;
+  // Aplikasi SHARK VISIT (Apps Script) dimuat di dalam halaman ini, jadi tampil layar penuh tanpa bar Chrome.
+  //  - ?app=1             : dibuka dari ikon di layar utama -> langsung aplikasi
+  //  - ?login=1&email=... : kembali dari project Login Google -> diteruskan ke aplikasi
+  //  - pindah halaman di dalam aplikasi (Menu <-> Sales Visit) dikirim lewat postMessage dari file Bungkus.html
+  var q = new URLSearchParams(location.search);
+  var ID = (APP_URL.match(/\/s\/([^/]+)\//) || [])[1] || '';
+  var standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+  function tambahParam(url, obj) {
+    var u = new URL(url);
+    Object.keys(obj).forEach(function (k) { u.searchParams.set(k, obj[k]); });
+    return u.toString();
+  }
+  function bukaAplikasi(url) {
+    document.getElementById('pembuka').classList.add('hidden');
+    document.getElementById('aplikasi').classList.remove('hidden');
+    var f = document.getElementById('layar');
+    f.onload = function () { document.getElementById('memuat').classList.add('hidden'); };
+    document.getElementById('memuat').classList.remove('hidden');
+    f.src = tambahParam(url, { wrap: '1' });
+  }
+  function awal() {
+    var p = { page: 'menu' };
+    if (q.get('login') === '1') ['login', 'email', 'ts', 'sig'].forEach(function (k) { if (q.get(k)) p[k] = q.get(k); });
+    if (q.get('page')) p.page = q.get('page');
+    // bersihkan alamat supaya data login tidak tersimpan di riwayat
+    try { history.replaceState(null, '', location.pathname + (standalone ? '?app=1' : '')); } catch (e) {}
+    bukaAplikasi(tambahParam(APP_URL, p));
+  }
+
+  // Pesan dari aplikasi: pindah halaman tetap di dalam layar penuh (hanya link aplikasi ini yang diterima)
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (!d.sharkNav || !/\.googleusercontent\.com$|^https:\/\/script\.google\.com$/.test(e.origin)) return;
+    if (!ID || String(d.sharkNav).indexOf(ID) < 0) return;
+    bukaAplikasi(d.sharkNav);
+  });
+
+  if (/GANTI_DENGAN/.test(APP_URL)) {
+    document.body.innerHTML = '<p style="padding:24px">Admin: isi APP_URL di index.html dengan link /exec aplikasi.</p>';
+  } else if (q.get('app') === '1' || q.get('login') === '1' || standalone) {
+    awal();
+  } else {
+    document.getElementById('pembuka').classList.remove('hidden');
+    document.getElementById('btnBuka').onclick = awal;
+  }
+
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
   var promptPasang = null;
   window.addEventListener('beforeinstallprompt', function (e) {
