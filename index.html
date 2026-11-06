@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SHARK VISIT</title>
+<meta name="theme-color" content="#4A4F55">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="SHARK VISIT">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // ====== GANTI DENGAN LINK /exec APLIKASI ASLI (bukan DEV) ======
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbwnzqEJHPm_laH-PYzz6jOZ7_z_m3Ny0xcbAJ2GZd4ersXwmKjC0PJQu3_4Gv_zxMXb/exec';
+  // ================================================================
+  // Dibuka dari ikon di layar utama (start_url ?app=1) -> langsung ke aplikasi.
+  if (/[?&]app=1/.test(location.search)) location.replace(APP_URL);
+</script>
+<style>
+  :root { --or:#FF4814; --or2:#D23F17; --sh:#4A4F55; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--or); color:#fff; font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+         display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 16px; text-align:center; }
+  img.logo { width:160px; height:160px; border-radius:32px; box-shadow:0 8px 24px rgba(0,0,0,.25); }
+  h1 { font-size:28px; letter-spacing:1px; margin:18px 0 6px; }
+  p { margin:4px 0; font-size:15px; opacity:.95; max-width:420px; line-height:1.45; }
+  .btn { display:block; width:100%; max-width:340px; margin:14px auto 0; padding:15px; border-radius:12px; border:none;
+         font:inherit; font-size:17px; font-weight:800; text-decoration:none; cursor:pointer; }
+  .putih { background:#fff; color:var(--or2); }
+  .abu { background:var(--sh); color:#fff; }
+  .hidden { display:none; }
+  .langkah { background:rgba(0,0,0,.18); border-radius:12px; padding:12px 14px; margin-top:18px; max-width:380px; text-align:left; font-size:14px; }
+  .langkah b { font-weight:800; }
+</style>
+</head>
+<body>
+  <img class="logo" src="icon-512.png" alt="Shark">
+  <h1>SHARK VISIT</h1>
+  <p>PT Sharprindo Dinamika Prima</p>
+  <button id="btnPasang" class="btn abu hidden">Pasang di Layar Utama</button>
+  <a id="btnBuka" class="btn putih" href="#">Buka SHARK VISIT</a>
+  <div class="langkah" id="petunjuk">
+    <b>Pasang ikon di HP:</b><br>
+    Android (Chrome): ketuk menu <b>⋮</b> → <b>Tambahkan ke layar utama</b> / <b>Instal aplikasi</b>.<br>
+    iPhone (Safari): ketuk <b>Bagikan</b> → <b>Tambahkan ke Layar Utama</b>.
+  </div>
+<script>
+  document.getElementById('btnBuka').href = APP_URL;
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+  var promptPasang = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); promptPasang = e;
+    document.getElementById('btnPasang').classList.remove('hidden');
+  });
+  document.getElementById('btnPasang').onclick = function () {
+    if (!promptPasang) return;
+    promptPasang.prompt();
+    promptPasang.userChoice.then(function () { promptPasang = null; document.getElementById('btnPasang').classList.add('hidden'); });
+  };
+</script>
+</body>
+</html>
