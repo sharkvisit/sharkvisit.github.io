@@ -2,6 +2,7 @@
   "name": "SHARK VISIT",
   "short_name": "SHARK VISIT",
   "description": "Aplikasi sales SHARK VISIT - PT Sharprindo Dinamika Prima",
+  "id": "./",
   "start_url": "./?app=1",
   "scope": "./",
   "display": "standalone",
