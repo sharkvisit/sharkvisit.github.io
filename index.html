@@ -41,7 +41,7 @@
   /* ---------- aplikasi layar penuh ---------- */
   #aplikasi { position:fixed; inset:0; background:var(--sh); }
   #aplikasi iframe { position:absolute; inset:0; width:100%; height:100%; border:0; background:#F4F5F7; }
-  #memuat { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; color:#fff; font-size:14px; }
+  #memuat { position:absolute; inset:0; z-index:2; background:var(--sh); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; color:#fff; font-size:14px; }
   #memuat img { width:96px; height:96px; border-radius:22px; }
   .putar { width:28px; height:28px; border:3px solid rgba(255,255,255,.25); border-top-color:#fff; border-radius:50%; animation:p 1s linear infinite; }
   @keyframes p { to { transform:rotate(360deg); } }
@@ -63,7 +63,7 @@
   </div>
 
   <div id="aplikasi" class="hidden">
-    <div id="memuat"><img src="icon-192.png" alt=""><div class="putar"></div>Memuat SHARK VISIT…</div>
+    <div id="memuat"><img src="icon-192.png" alt=""><div class="putar"></div><span id="memuatTeks">Memuat SHARK VISIT…</span></div>
     <iframe id="layar" title="SHARK VISIT"
             allow="geolocation *; camera *; microphone *; clipboard-read *; clipboard-write *; fullscreen *"></iframe>
   </div>
@@ -83,17 +83,15 @@
     return u.toString();
   }
   // ---------- TOMBOL BACK HP ----------
-  // HAL     : halaman aktif di dalam aplikasi (menu / visit / history)
-  // DALAM   : aplikasi sedang di layar dalam Menu (Katalog, Dashboard, dll.), dilaporkan oleh Menu.html
-  // JAGA    : ada satu entri "penjaga" di riwayat. Tombol Back memakai entri ini, lalu aplikasi mundur satu layar.
-  //           Di Menu utama tidak ada penjaga, jadi Back keluar dari aplikasi seperti biasa.
-  var HAL = 'menu', DALAM = false, JAGA = false, ABAIKAN = 0;
+  // Setiap layar yang dibuka dari sentuhan pengguna dicatat sebagai satu langkah riwayat (TUMPUK).
+  // Tombol Back HP mundur satu langkah -> aplikasi diminta menampilkan layar sebelumnya.
+  // Langkah TIDAK dibuat ulang setelah Back, karena Chrome HP melewati langkah riwayat yang dibuat tanpa sentuhan.
+  //   HAL    : halaman aktif (menu / visit / history)
+  //   TUMPUK : layar di dalam Menu, mis. ['scrMenu','scrKatalog','scrKatList','scrKatItem']
+  //   NAIK   : ada langkah riwayat untuk halaman Sales Visit / History (dibuka dari Menu)
+  var HAL = 'menu', TUMPUK = ['scrMenu'], NAIK = false, ABAIKAN = 0, ANTRI = [];
   function halDari(url) { var m = /[?&]page=([a-z]+)/i.exec(url); return m ? m[1].toLowerCase() : 'menu'; }
-  function aturJaga() {
-    var perlu = HAL !== 'menu' || DALAM;
-    if (perlu && !JAGA) { history.pushState({ sv: 1 }, ''); JAGA = true; }
-    else if (!perlu && JAGA) { JAGA = false; ABAIKAN++; history.back(); }
-  }
+  function mundur(n) { if (n > 0) { ABAIKAN++; history.go(-n); } }
   function kirimKeAplikasi(pesan) {   // aplikasi Apps Script berada beberapa lapis iframe di dalam
     (function kirim(w, n) {
       try { w.postMessage(pesan, '*'); } catch (e) {}
@@ -101,39 +99,60 @@
       try { for (var i = 0; i < w.frames.length; i++) kirim(w.frames[i], n + 1); } catch (e) {}
     })(document.getElementById('layar').contentWindow, 0);
   }
+  function catatLayar(id) {           // laporan dari Menu.html: layar id baru saja tampil
+    if (ABAIKAN) { ANTRI.push(id); return; }
+    if (HAL !== 'menu') return;
+    var k = TUMPUK.indexOf(id);
+    if (k > -1) { mundur(TUMPUK.length - 1 - k); TUMPUK.length = k + 1; }   // naik ke layar sebelumnya lewat tombol ‹
+    else { history.pushState({ sv: TUMPUK.length }, ''); TUMPUK.push(id); }  // layar baru: satu langkah riwayat
+  }
   window.addEventListener('popstate', function () {
-    if (ABAIKAN) { ABAIKAN--; return; }
-    JAGA = false;
-    if (HAL !== 'menu') bukaAplikasi(tambahParam(APP_URL, { page: 'menu' }));   // Sales Visit / History -> Menu
-    else if (DALAM) { DALAM = false; kirimKeAplikasi({ sharkBack: 1 }); }        // layar dalam Menu -> mundur satu layar
+    if (ABAIKAN) {
+      ABAIKAN--;
+      if (!ABAIKAN) { var a = ANTRI; ANTRI = []; a.forEach(catatLayar); }
+      return;
+    }
+    if (HAL !== 'menu') { NAIK = false; muatHalaman(tambahParam(APP_URL, { page: 'menu' })); return; }   // Sales Visit / History -> Menu
+    if (TUMPUK.length > 1) { TUMPUK.pop(); kirimKeAplikasi({ sharkBack: 1, ke: TUMPUK[TUMPUK.length - 1] }); }
   });
 
-  function bukaAplikasi(url) {
+  var LABEL = { menu: 'Membuka Menu…', visit: 'Membuka Sales Visit…', history: 'Membuka History…' }, SIAP_T = null;
+  function selesaiMemuat() { clearTimeout(SIAP_T); document.getElementById('memuat').classList.add('hidden'); }
+  function muatHalaman(url) {
     document.getElementById('pembuka').classList.add('hidden');
     document.getElementById('aplikasi').classList.remove('hidden');
+    HAL = halDari(url); TUMPUK = ['scrMenu'];
+    // Layar "Membuka …" tetap tampil sampai aplikasi mengirim tanda siap (maks. 20 detik)
+    document.getElementById('memuatTeks').textContent = LABEL[HAL] || 'Memuat SHARK VISIT…';
     document.getElementById('memuat').classList.remove('hidden');
+    clearTimeout(SIAP_T); SIAP_T = setTimeout(selesaiMemuat, 20000);
     // iframe diganti baru (bukan mengubah src) supaya pindah halaman tidak menumpuk riwayat Back
     var lama = document.getElementById('layar'), f = lama.cloneNode(false);
-    f.onload = function () { document.getElementById('memuat').classList.add('hidden'); };
     f.setAttribute('src', tambahParam(url, { wrap: '1' }));
     lama.parentNode.replaceChild(f, lama);
-    HAL = halDari(url); DALAM = false;
-    aturJaga();
   }
+  function bukaAplikasi(url) {        // pindah halaman dari link di dalam aplikasi
+    var tujuan = halDari(url);
+    if (tujuan === 'menu') { if (HAL !== 'menu' && NAIK) { NAIK = false; mundur(1); } }
+    else if (HAL === 'menu') { history.pushState({ sv: 'hal' }, ''); NAIK = true; }
+    muatHalaman(url);
+  }
+
   function awal() {
     var p = { page: 'menu' };
     if (q.get('login') === '1') ['login', 'email', 'ts', 'sig'].forEach(function (k) { if (q.get(k)) p[k] = q.get(k); });
     if (q.get('page')) p.page = q.get('page');
     // bersihkan alamat supaya data login tidak tersimpan di riwayat
     try { history.replaceState(null, '', location.pathname + (standalone ? '?app=1' : '')); } catch (e) {}
-    bukaAplikasi(tambahParam(APP_URL, p));
+    muatHalaman(tambahParam(APP_URL, p));
   }
 
   // Pesan dari aplikasi: pindah halaman tetap di dalam layar penuh (hanya link aplikasi ini yang diterima)
   window.addEventListener('message', function (e) {
     var d = e.data || {};
     if (!/\.googleusercontent\.com$|^https:\/\/script\.google\.com$/.test(e.origin)) return;
-    if (d.sharkLayar) { DALAM = !!d.dalam && HAL === 'menu'; aturJaga(); return; }   // laporan layar aktif dari Menu.html
+    if (d.sharkSiap) { selesaiMemuat(); return; }                 // aplikasi sudah tampil
+    if (d.sharkLayar) { catatLayar(d.sharkLayar); return; }      // laporan layar aktif dari Menu.html
     if (!d.sharkNav) return;
     if (!ID || String(d.sharkNav).indexOf(ID) < 0) return;
     bukaAplikasi(d.sharkNav);
